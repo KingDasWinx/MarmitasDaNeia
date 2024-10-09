@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Clientes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #resultado {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .cliente {
+            border-bottom: 1px solid #eee;
+            padding: 15px;
+            transition: background-color 0.3s;
+        }
+        .cliente:last-child {
+            border-bottom: none;
+        }
+        .cliente:hover {
+            background-color: #f9f9f9;
+        }
+        .cliente h2 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .cliente p {
+            margin: 5px 0;
+            color: #34495e;
+        }
+        .cliente .endereco {
+            margin-left: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Pesquisa de Clientes</h1>
+    <input type="text" id="pesquisa" placeholder="Digite o ID ou nome do cliente">
+    <div id="resultado"></div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCG-uFSeWbPT_mWahzXVdG1_mSB1mj-84E",
+            authDomain: "marmitasdaneia-8d223.firebaseapp.com",
+            databaseURL: "https://marmitasdaneia-8d223-default-rtdb.firebaseio.com",
+            projectId: "marmitasdaneia-8d223",
+            storageBucket: "marmitasdaneia-8d223.appspot.com",
+            messagingSenderId: "1027794680146",
+            appId: "1:1027794680146:web:0141059e840e042c97e28b"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const clientesRef = ref(database, 'clientes');
+
+        let clientes = {};
+
+        // Carrega os clientes do Firebase
+        onValue(clientesRef, (snapshot) => {
+            clientes = snapshot.val() || {};
+            console.log('Dados de clientes carregados');
+        });
+
+        document.getElementById('pesquisa').addEventListener('input', function() {
+            const termo = this.value.toLowerCase();
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = '';
+
+            if (termo.length < 1) return;
+
+            const clientesEncontrados = Object.entries(clientes).filter(([id, cliente]) =>
+                id.includes(termo) || cliente.nome.toLowerCase().includes(termo)
+            );
+
+            if (clientesEncontrados.length === 0) {
+                resultado.innerHTML = '<p style="text-align: center; padding: 15px;">Nenhum cliente encontrado.</p>';
+                return;
+            }
+
+            clientesEncontrados.forEach(([id, cliente]) => {
+                const clienteDiv = document.createElement('div');
+                clienteDiv.className = 'cliente';
+                clienteDiv.innerHTML = `
+                    <h2>${cliente.nome}</h2>
+                    <p><strong>ID:</strong> ${id}</p>
+                    <p><strong>Forma de pagamento padrão:</strong> ${cliente.forma_pagamento_padrao}</p>
+                    <p><strong>Endereços:</strong></p>
+                    ${cliente.enderecos.map(e => `
+                        <p class="endereco">
+                            ${e.endereco}, ${e.bairro}<br>
+                            <em>Referência: ${e.referencia}</em>
+                        </p>
+                    `).join('')}
+                `;
+                resultado.appendChild(clienteDiv);
+            });
+        });
+    </script>
+</body>
+
+</html>
